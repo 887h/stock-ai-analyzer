@@ -8,9 +8,11 @@ import sqlite3
 
 from dotenv import load_dotenv
 from email.message import EmailMessage
+from datetime import datetime
+import time
 
 load_dotenv()
-
+user_input = input("enter stock symbol:")
 
 class Browser:
 
@@ -45,14 +47,14 @@ class StockDataScraper:
     def __init__(self, browser):
         self.browser = browser
         self.page = browser.open_website()
-        self.user_input = input("enter stock symbol:")
+        
 
 
     def get_stock_data(self):
       try:
 
         search_input = self.page.get_by_label("Quote Lookup")
-        search_input.fill(self.user_input)
+        search_input.fill(user_input)
 
         first_option = self.page.get_by_role("option").first
         first_option.click()
@@ -353,7 +355,15 @@ class Email :
 
 
 if __name__ == "__main__":
+ 
 
+ TARGET_HOUR = 18
+ while True:
+ 
+  now=datetime.now()
+  
+  if now.hour==TARGET_HOUR and now.minute==10:
+    print("Starting stock analysis...")
 
     browser = Browser()
 
@@ -365,12 +375,13 @@ if __name__ == "__main__":
 
 
     saved=dataBase_storage.save_stock_data()
+    browser.close_website()
 
     if saved:
 
 
 
-        browser.close_website()
+        
 
         stock_analyzer = StockAnalyzer(dataBase_storage)
 
@@ -385,4 +396,31 @@ if __name__ == "__main__":
     email.send_email()
 
     dataBase_storage.close_database()
+    print("Stock analysis completed successfully.")
+    time.sleep(120)
+    continue
 
+  remaining_minutes = TARGET_HOUR * 60 - (now.hour * 60 + now.minute )
+
+  if remaining_minutes <=0:
+        remaining_minutes += 24 * 60
+        print(f"Remaining: {remaining_minutes} minutes")
+
+  if remaining_minutes > 600:
+
+        print("Sleeping for 8 hours...")
+        time.sleep(8 * 60 * 60)  
+
+  elif remaining_minutes > 60:        
+     print("Sleeping for 1 hour...")
+     time.sleep(60 * 60)
+
+
+  else:
+
+        print("Checking every 50 seconds...")
+        time.sleep(50)  
+
+
+
+      
